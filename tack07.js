@@ -5,80 +5,134 @@
  * 2. Множить на 2
  * 3. Додає 10
  * 4. Конвертує в рядок
- * * Очікуваний результат: "20"
+ * 
  */
 function simpleChain() {
     return Promise.resolve(5)
-        // Множимо на 2: 5 * 2 = 10
-        .then(number => number * 2)
-        // Додаємо 10: 10 + 10 = 20
-        .then(number => number + 10)
-        // Конвертуємо в рядок: 20 -> "20"
-        .then(number => String(number));
+        .then(value => value * 2)
+        .then(value => value + 10)
+        .then(value => String(value));
 }
 
 // Перевірка:
 simpleChain()
-    .then(result => {
-        console.log(' Тест 7.1:', result);
-        console.log(' Тип даних:', typeof result); 
+    .then(result => console.log(' Тест 7.1:', result)); 
+
+
+    // ==================== ЗАВДАННЯ 7.3 ====================
+function fetchUserData(userId) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve({ id: userId, username: 'user_' + userId });
+        }, 100);
     });
+}
 
+function fetchUserPosts(user) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve({
+                ...user,
+                posts: ['Post 1', 'Post 2', 'Post 3']
+            });
+        }, 100);
+    });
+}
 
-// ==================== ЗАВДАННЯ 7.3 ====================
-    /**
+function countPosts(userData) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve({
+                ...userData,
+                postCount: userData.posts.length
+            });
+        }, 100);
+    });
+}
+
+/**
  * Створіть функцію, яка:
  * 1. Отримує дані користувача
  * 2. Отримує його пости
  * 3. Рахує кількість постів
- * * @param {number} userId 
- * @returns {Promise<{id: number, username: string, posts: string[], postCount: number}>}
  */
 function getUserWithPostCount(userId) {
-    // Повертаємо ланцюжок промісів
     return fetchUserData(userId)
-        .then(user => fetchUserPosts(user))    // Передаємо результат першої функції у другу
-        .then(userData => countPosts(userData)); // Передаємо результат другої у третю
+        .then(user => fetchUserPosts(user))
+        .then(userData => countPosts(userData));
 }
 
 // Перевірка:
 getUserWithPostCount(123)
-    .then(result => {
-        console.log(' Тест 7.3:', result);
-        console.log(' Кількість постів:', result.postCount);
+    .then(result => console.log(' Тест 7.3:', result));
+
+
+
+    // ==================== ЗАВДАННЯ 7.5 ====================
+const products = {
+    101: { id: 101, name: 'Laptop', price: 1000, stock: 5 },
+    102: { id: 102, name: 'Mouse', price: 25, stock: 50 },
+    103: { id: 103, name: 'Keyboard', price: 75, stock: 0 }
+};
+
+function getProduct(productId) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const product = products[productId];
+            if (product) {
+                resolve(product);
+            } else {
+                reject(new Error('Product not found'));
+            }
+        }, 100);
     });
+}
 
+function checkStock(product) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if (product.stock > 0) {
+                resolve(product);
+            } else {
+                reject(new Error('Out of stock'));
+            }
+        }, 100);
+    });
+}
 
+function calculateTotal(product, quantity) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve({
+                product: product.name,
+                quantity: quantity,
+                unitPrice: product.price,
+                total: product.price * quantity
+            });
+        }, 100);
+    });
+}
 
-// ==================== ЗАВДАННЯ 7.5 ====================
-    /**
+/**
  * Створіть функцію оформлення замовлення:
  * 1. Отримати продукт за ID
  * 2. Перевірити наявність на складі
  * 3. Обчислити вартість
  * 4. Обробити всі можливі помилки
- * * @param {number} productId 
- * @param {number} quantity 
- * @returns {Promise<{product: string, quantity: number, unitPrice: number, total: number} | {error: string}>}
  */
 function placeOrder(productId, quantity) {
     return getProduct(productId)
         .then(product => checkStock(product))
         .then(product => calculateTotal(product, quantity))
-        // Обробляємо помилки, що виникли на будь-якому етапі вище
-        .catch(error => {
-            // Замість того, щоб прокидати помилку далі,
-            // ми повертаємо об'єкт з описом помилки за умовою
-            return { error: error.message };
-        });
+        .catch(error => ({ error: error.message })); // Короткий запис об'єкта
 }
 
 // Перевірка:
 placeOrder(101, 2)
-    .then(result => console.log(' Тест 7.5a (успіх):', result));
+    .then(result => console.log(' Тест 7.5a:', result));
 
 placeOrder(103, 1)
-    .then(result => console.log(' Тест 7.5b (немає в наявності):', result));
+    .then(result => console.log(' Тест 7.5b:', result));
 
 placeOrder(999, 1)
-    .then(result => console.log(' Тест 7.5c (не знайдено):', result));
+    .then(result => console.log(' Тест 7.5c:', result));
